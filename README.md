@@ -1,1 +1,1 @@
-# text_to_image
+# pdf_footprint
