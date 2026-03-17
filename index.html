@@ -601,6 +601,16 @@
             btn.disabled = false;
             btn.textContent = `🗜️ 전체 ZIP으로 다운로드 (${window._zipResults.length}개)`;
         }
+
+        // 우클릭 방지 스크립트
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+}, false);
+
+// 드래그 및 선택 방지
+document.addEventListener('selectstart', function(e) {
+  e.preventDefault();
+}, false);
     </script>
 </body>
 </html>
