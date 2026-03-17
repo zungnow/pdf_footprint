@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 자료번호 추가하기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- pdf-lib + fontkit for Korean font embedding -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e74c3c;
+            --accent-light: #ff6b6b;
+            --success: #27ae60;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --border: #ecf0f1;
+            --shadow: rgba(44, 62, 80, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+
+        .header { text-align: center; margin-bottom: 3rem; }
+
+        .title {
+            font-family: 'Crimson Text', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle { font-size: 1.2rem; color: var(--text-light); font-weight: 400; }
+
+        .upload-section {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover { box-shadow: 0 15px 40px rgba(44, 62, 80, 0.15); }
+
+        .upload-icon { font-size: 4rem; color: var(--accent); margin-bottom: 1rem; }
+
+        .upload-title { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; }
+
+        .upload-desc { font-size: 1rem; color: var(--text-light); margin-bottom: 2rem; }
+
+        .file-input-wrapper { position: relative; display: inline-block; }
+
+        .file-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+
+        .file-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .file-button:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3); }
+
+        .file-list { margin-top: 2rem; text-align: left; }
+
+        .file-item {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .file-icon { font-size: 1.5rem; color: var(--accent); }
+        .file-name { font-weight: 500; flex: 1; }
+        .file-size { color: var(--text-light); font-size: 0.9rem; }
+
+        .process-button {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            letter-spacing: 0.5px;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .process-button:hover { background: #219a52; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3); }
+        .process-button:disabled { background: var(--text-light); cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .progress-section {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 25px var(--shadow);
+            display: none;
+        }
+
+        .progress-title { font-size: 1.3rem; font-weight: 600; color: var(--primary); margin-bottom: 1rem; text-align: center; }
+
+        .progress-bar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); width: 0%; transition: width 0.3s ease; }
+
+        .progress-text { text-align: center; color: var(--text-light); font-size: 0.9rem; }
+
+        .results-section {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 25px var(--shadow);
+            display: none;
+        }
+
+        .results-title { font-size: 1.5rem; font-weight: 700; color: var(--success); margin-bottom: 1.5rem; text-align: center; }
+
+        .result-item {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            gap: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .result-name { font-weight: 500; flex: 1; }
+
+        .download-btn {
+            padding: 0.5rem 1rem;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover { background: var(--primary); transform: translateY(-1px); }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+
+        .info-card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+
+        .info-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .info-title { font-size: 1.2rem; font-weight: 600; color: var(--primary); margin-bottom: 0.8rem; }
+        .info-desc { color: var(--text-light); font-size: 0.95rem; }
+
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .title { font-size: 2.5rem; }
+            .upload-section { padding: 2rem; }
+            .container { padding: 1rem; }
+        }
+
+        .drag-over { border-color: var(--accent); background: rgba(231, 76, 60, 0.05); }
+
+        .zip-btn {
+            padding: 0.9rem 2rem;
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .zip-btn:hover { background: linear-gradient(135deg, #1a6fa5, #2980b9); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(41,128,185,0.35); }
+        .zip-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* 폰트 로딩 안내 */
+        #font-status {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        #font-status.ready { color: var(--success); }
+        #font-status.error { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header fade-in">
+            <h1 class="title">PDF 자료번호 추가하기</h1>
+            <p class="subtitle">PDF 문서에 자동으로 자료번호를 추가하세요</p>
+            <p id="font-status">⏳ 한글 폰트 로딩 중...</p>
+        </div>
+
+        <div class="upload-section fade-in" id="upload-section">
+            <div class="upload-icon">📄</div>
+            <h2 class="upload-title">PDF 파일을 선택하세요</h2>
+            <p class="upload-desc">
+                여러 개의 PDF 파일을 한 번에 처리할 수 있습니다<br>
+                파일명 앞부분이 입력됩니다 (예: <strong>소명자료 2_사업자등록증.pdf</strong> → 라벨: <strong>소명자료 2</strong>)
+            </p>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="pdf-files" class="file-input" multiple accept=".pdf">
+                <label for="pdf-files" class="file-button">📁 파일 선택</label>
+            </div>
+
+            <div id="file-list" class="file-list" style="display: none;">
+                <h3>선택된 파일:</h3>
+                <div id="file-items"></div>
+                <button class="process-button" id="process-btn" onclick="processFiles()" disabled>
+                    ⏳ 한글 폰트 로딩 중...
+                </button>
+            </div>
+        </div>
+
+        <div class="progress-section" id="progress-section">
+            <h3 class="progress-title">처리 중...</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p class="progress-text" id="progress-text">0 / 0 파일 완료</p>
+        </div>
+
+        <div class="results-section" id="results-section">
+            <h3 class="results-title">✅ 처리 완료!</h3>
+            <div id="results-list"></div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card fade-in">
+                <div class="info-icon">🏷️</div>
+                <div class="info-title">번호 자동 생성</div>
+                <div class="info-desc">파일명의 밑줄 문자(_) 앞 부분을 자동으로 입력합니다</div>
+            </div>
+            <div class="info-card fade-in">
+                <div class="info-icon">📍</div>
+                <div class="info-title">정확한 위치</div>
+                <div class="info-desc">PDF 첫 페이지 하단 중앙에 깔끔하게 표시됩니다</div>
+            </div>
+            <div class="info-card fade-in">
+                <div class="info-icon">⚡</div>
+                <div class="info-title">문의사항</div>
+                <div class="info-desc">있으시면 언제든지 정영현 과장에게 연락주세요</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── 전역 상태 ──────────────────────────────────────────
+        let selectedFiles = [];
+        let koreanFontBytes = null; // 로드된 폰트 바이너리
+
+        const fileInput      = document.getElementById('pdf-files');
+        const fileList       = document.getElementById('file-list');
+        const fileItems      = document.getElementById('file-items');
+        const uploadSection  = document.getElementById('upload-section');
+        const fontStatus     = document.getElementById('font-status');
+
+        // ── 한글 폰트 사전 로드 ────────────────────────────────
+        // Google Fonts API에서 NanumGothic TTF를 직접 가져옵니다.
+        // CORS 이슈가 없는 공개 CDN URL 사용
+        const FONT_URL = 'https://fonts.gstatic.com/s/nanumgothic/v23/PN_3Rfu-H2-43QY0TVoTkDRZXgH4IkI0mQ.woff2';
+        // woff2는 pdf-lib가 직접 파싱 불가 → TTF fallback URL 사용
+        const FONT_URL_TTF = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf';
+
+        async function loadKoreanFont() {
+            // 폰트 로딩 시작 시 버튼 비활성화
+            const processBtn = document.getElementById('process-btn');
+            if (processBtn) processBtn.disabled = true;
+
+            try {
+                const res = await fetch(FONT_URL_TTF);
+                if (!res.ok) throw new Error('fetch failed');
+                const buf = await res.arrayBuffer();
+                koreanFontBytes = new Uint8Array(buf);
+                fontStatus.textContent = '✅ 한글 폰트 준비 완료 (나눔고딕)';
+                fontStatus.className = 'ready';
+            } catch (e) {
+                try {
+                    const res2 = await fetch('https://cdn.jsdelivr.net/npm/@fontsource/nanum-gothic@4.5.0/files/nanum-gothic-korean-400-normal.woff2');
+                    if (!res2.ok) throw new Error('fallback failed');
+                    koreanFontBytes = new Uint8Array(await res2.arrayBuffer());
+                    fontStatus.textContent = '✅ 한글 폰트 준비 완료';
+                    fontStatus.className = 'ready';
+                } catch (e2) {
+                    fontStatus.textContent = '⚠️ 폰트 로딩 실패 – 페이지를 새로고침해주세요';
+                    fontStatus.className = 'error';
+                    console.warn('Korean font load failed:', e2);
+                }
+            } finally {
+                // 로딩 완료(성공/실패 무관) 후 버튼 활성화
+                if (processBtn) {
+                    processBtn.disabled = false;
+                    processBtn.textContent = koreanFontBytes ? '🚀 라벨 추가 시작' : '⚠️ 라벨 추가 시작 (폰트 오류)';
+                }
+            }
+        }
+
+        loadKoreanFont();
+
+        // ── 파일 선택 이벤트 ───────────────────────────────────
+        fileInput.addEventListener('change', handleFileSelect);
+
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('drag-over');
+        });
+        uploadSection.addEventListener('dragleave', () => uploadSection.classList.remove('drag-over'));
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length > 0) {
+                const dt = new DataTransfer();
+                files.forEach(f => dt.items.add(f));
+                fileInput.files = dt.files;
+                handleFileSelect();
+            } else {
+                alert('PDF 파일만 업로드할 수 있습니다.');
+            }
+        });
+
+        function handleFileSelect() {
+            const files = Array.from(fileInput.files);
+            selectedFiles = files.filter(f =>
+                f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+            );
+            if (files.length > 0 && selectedFiles.length === 0) {
+                alert('PDF 파일만 선택할 수 있습니다.');
+                return;
+            }
+            if (selectedFiles.length > 0) displayFileList();
+        }
+
+        function displayFileList() {
+            fileItems.innerHTML = '';
+            selectedFiles.forEach((file) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                const label = file.name.split('.')[0].split('_')[0];
+                item.innerHTML = `
+                    <div class="file-icon">📄</div>
+                    <div class="file-name">
+                        <div>${file.name}</div>
+                        <div style="font-size:0.8rem;color:var(--accent);">라벨: ${label}</div>
+                    </div>
+                    <div class="file-size">${(file.size/1024/1024).toFixed(2)} MB</div>
+                `;
+                fileItems.appendChild(item);
+            });
+            fileList.style.display = 'block';
+            fileList.classList.add('fade-in');
+        }
+
+        // ── 메인 처리 ──────────────────────────────────────────
+        async function processFiles() {
+            if (selectedFiles.length === 0) return;
+
+            // 폰트 로딩 완료 전이면 대기
+            if (!koreanFontBytes) {
+                const processBtn = document.getElementById('process-btn');
+                processBtn.disabled = true;
+                processBtn.textContent = '⏳ 한글 폰트 로딩 중... 잠시만 기다려주세요';
+                // 폰트 로딩 완료될 때까지 최대 15초 대기
+                for (let i = 0; i < 150; i++) {
+                    await new Promise(r => setTimeout(r, 100));
+                    if (koreanFontBytes) break;
+                }
+                if (!koreanFontBytes) {
+                    alert('한글 폰트 로딩에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+                    processBtn.disabled = false;
+                    processBtn.textContent = '🚀 라벨 추가 시작';
+                    return;
+                }
+                processBtn.disabled = false;
+            }
+
+            const processBtn     = document.getElementById('process-btn');
+            const progressSection = document.getElementById('progress-section');
+            const progressFill   = document.getElementById('progress-fill');
+            const progressText   = document.getElementById('progress-text');
+            const resultsSection  = document.getElementById('results-section');
+            const resultsList     = document.getElementById('results-list');
+
+            processBtn.disabled = true;
+            processBtn.textContent = '처리 중...';
+            progressSection.style.display = 'block';
+            resultsSection.style.display = 'none';
+            resultsList.innerHTML = '';
+
+            const results = [];
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                progressFill.style.width = ((i + 1) / selectedFiles.length * 100) + '%';
+                progressText.textContent = `${i + 1} / ${selectedFiles.length} 파일 완료`;
+
+                try {
+                    const result = await addLabelToPdf(file);
+                    results.push({ originalName: file.name, success: true, bytes: result.bytes, name: result.name });
+                } catch (error) {
+                    console.error(`Error processing ${file.name}:`, error);
+                    results.push({ originalName: file.name, success: false, error: error.message });
+                }
+
+                await new Promise(r => setTimeout(r, 50));
+            }
+
+            displayResults(results);
+            processBtn.disabled = false;
+            processBtn.textContent = '🚀 라벨 추가 시작';
+            progressSection.style.display = 'none';
+        }
+
+        // ── PDF 처리 핵심 함수 ────────────────────────────────
+        async function addLabelToPdf(file) {
+            const arrayBuffer = await file.arrayBuffer();
+
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            pdfDoc.registerFontkit(fontkit);
+
+            const firstPage = pdfDoc.getPages()[0];
+            const { width } = firstPage.getSize();
+
+            // 라벨 텍스트: 파일명에서 첫 번째 _ 앞 부분
+            const baseName = file.name.replace(/\.pdf$/i, '');
+            const label = baseName.split('_')[0].trim();
+
+            const fontSize = 10;
+
+            let font;
+            if (koreanFontBytes) {
+                font = await pdfDoc.embedFont(koreanFontBytes);
+            } else {
+                font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+            }
+
+            // ── 너비: 폰트 메트릭 정확한 값 + 소폭 여유 ──────
+            const measuredWidth = font.widthOfTextAtSize(label, fontSize);
+            const textWidth = measuredWidth + 1; // 1pt 소폭 여유만
+
+            // ── 높이: fontSize 기반 고정 비율 ──────────────────
+            // pdf-lib drawText의 y는 baseline 기준.
+            // 한글 ascent ≈ fontSize*0.88, descent ≈ fontSize*0.22
+            const ascent  = fontSize * 0.88;   // baseline 위 글자 높이
+            const descent = fontSize * 0.22;   // baseline 아래 꼬리 높이
+
+            const paddingX = 4;
+            const paddingTop    = 4;  // ascent 위 여백
+            const paddingBottom = 4;  // descent 아래 여백
+
+            const boxWidth  = textWidth + paddingX * 2;
+            const boxHeight = ascent + descent + paddingTop + paddingBottom;
+            const x = (width - boxWidth) / 2;
+            const y = 20;  // 페이지 하단에서 y pt 위
+
+            // 박스 그리기
+            firstPage.drawRectangle({
+                x, y,
+                width: boxWidth,
+                height: boxHeight,
+                color: PDFLib.rgb(1, 1, 1),
+                borderColor: PDFLib.rgb(0.9, 0, 0),
+                borderWidth: 1.2,
+            });
+
+            // 텍스트 baseline = 박스 하단 + paddingBottom + descent
+            firstPage.drawText(label, {
+                x: x + paddingX,
+                y: y + paddingBottom + descent,
+                size: fontSize,
+                font: font,
+                color: PDFLib.rgb(0.9, 0, 0),
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            return { bytes: pdfBytes, name: file.name };
+        }
+
+        // ── 결과 표시 ──────────────────────────────────────────
+        function displayResults(results) {
+            const resultsSection = document.getElementById('results-section');
+            const resultsList    = document.getElementById('results-list');
+
+            const successes = results.filter(r => r.success);
+
+            results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+
+                if (result.success) {
+                    // blob URL 생성
+                    const blob = new Blob([result.bytes], { type: 'application/pdf' });
+                    const url  = URL.createObjectURL(blob);
+                    item.innerHTML = `
+                        <div class="result-name">✅ ${result.originalName}</div>
+                        <a href="${url}" download="${result.name}" class="download-btn">📥 다운로드</a>
+                    `;
+                } else {
+                    item.innerHTML = `
+                        <div class="result-name">❌ ${result.originalName}</div>
+                        <div style="color:var(--accent);font-size:0.9rem;">오류: ${result.error}</div>
+                    `;
+                }
+                resultsList.appendChild(item);
+            });
+
+            // ✅ 2개 이상 성공 시 ZIP 다운로드 버튼 표시
+            if (successes.length >= 2) {
+                const zipWrap = document.createElement('div');
+                zipWrap.style.cssText = 'text-align:center; margin-top:1.5rem;';
+                zipWrap.innerHTML = `
+                    <button onclick="downloadZip()" class="zip-btn">
+                        🗜️ 전체 다운로드.ZIP (${successes.length}개)
+                    </button>
+                `;
+                resultsList.appendChild(zipWrap);
+
+                // 성공 결과 전역 저장 (ZIP 생성용)
+                window._zipResults = successes;
+            }
+
+            resultsSection.style.display = 'block';
+            resultsSection.classList.add('fade-in');
+        }
+
+        // ── ZIP 다운로드 ───────────────────────────────────────
+        async function downloadZip() {
+            const btn = document.querySelector('.zip-btn');
+            btn.disabled = true;
+            btn.textContent = '🗜️ ZIP 생성 중...';
+
+            const zip = new JSZip();
+            for (const result of window._zipResults) {
+                zip.file(result.name, result.bytes);
+            }
+
+            const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'labeled_pdfs.zip';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            btn.disabled = false;
+            btn.textContent = `🗜️ 전체 ZIP으로 다운로드 (${window._zipResults.length}개)`;
+        }
+    </script>
+</body>
+</html>
