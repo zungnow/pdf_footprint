@@ -304,7 +304,7 @@
     <script>
         // ── 전역 상태 ──────────────────────────────────────────
         let selectedFiles = [];
-        let koreanFontBytes = null; // 로드된 폰트 바이너리
+        let koreanFontBytes = null;
 
         const fileInput      = document.getElementById('pdf-files');
         const fileList       = document.getElementById('file-list');
@@ -462,95 +462,139 @@
             progressSection.style.display = 'none';
         }
 
-        // ── PDF 처리 핵심 함수 ────────────────────────────────
-async function addLabelToPdf(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-    pdfDoc.registerFontkit(fontkit);
+        // ── PDF 처리 핵심 함수 (회전 대응 버전) ──────────────────
+        async function addLabelToPdf(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            pdfDoc.registerFontkit(fontkit);
 
-    const firstPage = pdfDoc.getPages()[0];
+            const firstPage = pdfDoc.getPages()[0];
 
-    // ★ 핵심: 회전값을 읽어서 실제 보이는 width/height를 계산
-    const { width: rawWidth, height: rawHeight } = firstPage.getSize();
-    const rotation = firstPage.getRotation().angle; // 0, 90, 180, 270
+            // 페이지의 원본 width/height 및 회전값 읽기
+            const { width: rawWidth, height: rawHeight } = firstPage.getSize();
+            const rotation = firstPage.getRotation().angle; // 0, 90, 180, 270
 
-    // 90° 또는 270° 회전된 경우 width/height가 뒤바뀜
-    const isRotated = (rotation === 90 || rotation === 270);
-    const visibleWidth  = isRotated ? rawHeight : rawWidth;
-    const visibleHeight = isRotated ? rawWidth  : rawHeight;
+            const baseName = file.name.replace(/\.pdf$/i, '');
+            const label = baseName.split('_')[0].trim();
 
-    const baseName = file.name.replace(/\.pdf$/i, '');
-    const label = baseName.split('_')[0].trim();
+            const fontSize = 10;
+            let font;
+            if (koreanFontBytes) {
+                font = await pdfDoc.embedFont(koreanFontBytes);
+            } else {
+                font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+            }
 
-    const fontSize = 10;
-    let font;
-    if (koreanFontBytes) {
-        font = await pdfDoc.embedFont(koreanFontBytes);
-    } else {
-        font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-    }
+            const measuredWidth = font.widthOfTextAtSize(label, fontSize);
+            const textWidth = measuredWidth + 1;
+            const ascent  = fontSize * 0.88;
+            const descent = fontSize * 0.22;
+            const paddingX = 4;
+            const paddingTop    = 4;
+            const paddingBottom = 4;
 
-    const measuredWidth = font.widthOfTextAtSize(label, fontSize);
-    const textWidth = measuredWidth + 1;
-    const ascent  = fontSize * 0.88;
-    const descent = fontSize * 0.22;
-    const paddingX = 4, paddingTop = 4, paddingBottom = 4;
-    const boxWidth  = textWidth + paddingX * 2;
-    const boxHeight = ascent + descent + paddingTop + paddingBottom;
+            const boxWidth  = textWidth + paddingX * 2;
+            const boxHeight = ascent + descent + paddingTop + paddingBottom;
 
-    // ★ 회전에 따라 실제 좌표 변환
-    let x, y, textRotation;
-    const margin = 20;
+            const margin = 20; // 하단 여백
 
-    if (rotation === 0) {
-        // 정방향: 하단 중앙
-        x = (rawWidth - boxWidth) / 2;
-        y = margin;
-        textRotation = PDFLib.degrees(0);
-    } else if (rotation === 90) {
-        // 시계 반대 방향 90° 회전 (왼쪽이 아래)
-        // 화면 하단 중앙 = PDF 좌표계에서 좌측 중앙
-        x = margin;
-        y = (rawHeight - boxWidth) / 2;
-        textRotation = PDFLib.degrees(90);
-    } else if (rotation === 270) {
-        // 시계 방향 90° 회전 (오른쪽이 아래)
-        x = rawWidth - margin - boxHeight;
-        y = (rawHeight - boxWidth) / 2;
-        textRotation = PDFLib.degrees(270);
-    } else if (rotation === 180) {
-        // 180° 회전
-        x = (rawWidth - boxWidth) / 2;
-        y = rawHeight - margin - boxHeight;
-        textRotation = PDFLib.degrees(180);
-    }
+            let rectX, rectY, textX, textY, drawRotation;
 
-    firstPage.drawRectangle({
-        x, y,
-        width:  rotation === 0 || rotation === 180 ? boxWidth  : boxHeight,
-        height: rotation === 0 || rotation === 180 ? boxHeight : boxWidth,
-        color: PDFLib.rgb(1, 1, 1),
-        borderColor: PDFLib.rgb(0.9, 0, 0),
-        borderWidth: 1.2,
-        rotate: textRotation,
-    });
+            if (rotation === 0) {
+                // ── 정방향 ──────────────────────────────────────
+                // 하단 중앙
+                rectX = (rawWidth - boxWidth) / 2;
+                rectY = margin;
+                textX = rectX + paddingX;
+                textY = rectY + paddingBottom + descent;
+                drawRotation = PDFLib.degrees(0);
 
-    firstPage.drawText(label, {
-        x: rotation === 90  ? x + paddingBottom + descent
-         : rotation === 270 ? x + boxHeight - paddingBottom - descent
-         : x + paddingX,
-        y: rotation === 90  ? y + paddingX
-         : rotation === 270 ? y + boxWidth - paddingX - textWidth
-         : y + paddingBottom + descent,
-        size: fontSize,
-        font: font,
-        color: PDFLib.rgb(0.9, 0, 0),
-        rotate: textRotation,
-    });
+                firstPage.drawRectangle({
+                    x: rectX, y: rectY,
+                    width: boxWidth, height: boxHeight,
+                    color: PDFLib.rgb(1, 1, 1),
+                    borderColor: PDFLib.rgb(0.9, 0, 0),
+                    borderWidth: 1.2,
+                });
+                firstPage.drawText(label, {
+                    x: textX, y: textY,
+                    size: fontSize, font,
+                    color: PDFLib.rgb(0.9, 0, 0),
+                });
 
-    const pdfBytes = await pdfDoc.save();
-    return { bytes: pdfBytes, name: file.name };
-}
+            } else if (rotation === 90) {
+                // ── 시계 반대 방향 90° (왼쪽이 화면 하단) ──────
+                // 화면에서 보이는 하단 중앙 = PDF 좌표계에서 좌측 중앙
+                // PDF 좌표계 기준: x=margin(왼쪽 끝), y=중앙
+                rectX = margin;
+                rectY = (rawHeight - boxWidth) / 2;
+                textX = rectX + paddingBottom + descent;
+                textY = rectY + paddingX;
+                drawRotation = PDFLib.degrees(90);
+
+                firstPage.drawRectangle({
+                    x: rectX, y: rectY,
+                    width: boxHeight, height: boxWidth,
+                    color: PDFLib.rgb(1, 1, 1),
+                    borderColor: PDFLib.rgb(0.9, 0, 0),
+                    borderWidth: 1.2,
+                });
+                firstPage.drawText(label, {
+                    x: textX, y: textY,
+                    size: fontSize, font,
+                    color: PDFLib.rgb(0.9, 0, 0),
+                    rotate: drawRotation,
+                });
+
+            } else if (rotation === 270) {
+                // ── 시계 방향 90° (오른쪽이 화면 하단) ─────────
+                rectX = rawWidth - margin - boxHeight;
+                rectY = (rawHeight - boxWidth) / 2;
+                textX = rectX + boxHeight - paddingBottom - descent;
+                textY = rectY + boxWidth - paddingX;
+                drawRotation = PDFLib.degrees(270);
+
+                firstPage.drawRectangle({
+                    x: rectX, y: rectY,
+                    width: boxHeight, height: boxWidth,
+                    color: PDFLib.rgb(1, 1, 1),
+                    borderColor: PDFLib.rgb(0.9, 0, 0),
+                    borderWidth: 1.2,
+                });
+                firstPage.drawText(label, {
+                    x: textX, y: textY,
+                    size: fontSize, font,
+                    color: PDFLib.rgb(0.9, 0, 0),
+                    rotate: drawRotation,
+                });
+
+            } else if (rotation === 180) {
+                // ── 180° 회전 ────────────────────────────────────
+                rectX = (rawWidth - boxWidth) / 2;
+                rectY = rawHeight - margin - boxHeight;
+                textX = rectX + boxWidth - paddingX;
+                textY = rectY + boxHeight - paddingBottom - descent;
+                drawRotation = PDFLib.degrees(180);
+
+                firstPage.drawRectangle({
+                    x: rectX, y: rectY,
+                    width: boxWidth, height: boxHeight,
+                    color: PDFLib.rgb(1, 1, 1),
+                    borderColor: PDFLib.rgb(0.9, 0, 0),
+                    borderWidth: 1.2,
+                });
+                firstPage.drawText(label, {
+                    x: textX, y: textY,
+                    size: fontSize, font,
+                    color: PDFLib.rgb(0.9, 0, 0),
+                    rotate: drawRotation,
+                });
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            return { bytes: pdfBytes, name: file.name };
+        }
+
         // ── 결과 표시 ──────────────────────────────────────────
         function displayResults(results) {
             const resultsSection = document.getElementById('results-section');
