@@ -13,230 +13,234 @@
 
     <link rel="icon" href="YH-SOFT.ico" type="image/x-icon">
     <style>
-        :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #e74c3c;
-            --accent-light: #ff6b6b;
-            --success: #27ae60;
-            --text: #2c3e50;
-            --text-light: #7f8c8d;
-            --bg: #f8f9fa;
-            --card: #ffffff;
-            --border: #ecf0f1;
-            --shadow: rgba(44, 62, 80, 0.1);
-        }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #f4f3ef;
+  --paper: #ffffff;
+  --paper2: #f9f8f5;
+  --paper3: #f2f1ec;
+  --ink: #1c1b18;
+  --ink2: #4b4840;
+  --ink3: #9b9488;
+  --rule: #e2dfd7;
+  --rule2: #d0cdc4;
+  --blue: #1d4ed8;
+  --blue2: #2563eb;
+  --blue-bg: #eff6ff;
+  --blue-dim: rgba(37,99,235,.1);
+  --green: #15803d;
+  --green-bg: #f0fdf4;
+  --red: #b91c1c;
+  --red-bg: #fef2f2;
+  --amber: #b45309;
+  --amber-bg: #fffbeb;
+  --r: 6px;
+  --r2: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+}
 
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
+.container { max-width: 1050px; margin: 0 auto; padding: 1.5rem 1rem; }
 
-        .container { max-width: 1050px; margin: 0 auto; padding: 1.2rem; }
+.header { text-align: center; margin-bottom: 1.5rem; }
+.title {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.6rem; font-weight: 700;
+  color: var(--ink); margin-bottom: 0.3rem;
+  letter-spacing: -.02em;
+}
+.subtitle { font-size: .95rem; color: var(--ink3); font-weight: 400; }
 
-        .header { text-align: center; margin-bottom: 1.4rem; }
+.upload-section {
+  background: var(--paper);
+  border-radius: var(--r2);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--rule);
+  margin-bottom: 1rem;
+  text-align: center;
+  transition: border-color .2s;
+}
+.upload-section:hover { border-color: var(--rule2); }
 
-        .title {
-            font-family: 'Crimson Text', serif;
-            font-size: 2.3rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.4rem;
-            letter-spacing: -0.02em;
-        }
+.upload-icon { font-size: 2.2rem; color: var(--blue2); margin-bottom: .5rem; }
+.upload-title { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: .4rem; }
+.upload-desc { font-size: .875rem; color: var(--ink3); margin-bottom: 1rem; }
 
-        .subtitle { font-size: 1rem; color: var(--text-light); font-weight: 400; }
+.file-input-wrapper { position: relative; display: inline-block; }
+.file-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
 
-        .upload-section {
-            background: var(--card);
-            border-radius: 14px;
-            padding: 1.8rem;
-            box-shadow: 0 6px 20px var(--shadow);
-            border: 1px solid var(--border);
-            margin-bottom: 1.2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
+.file-button {
+  display: inline-block;
+  padding: .7rem 1.5rem;
+  background: var(--ink);
+  color: #f0ede5;
+  border-radius: var(--r);
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+  letter-spacing: -.01em;
+}
+.file-button:hover { background: #2e2c25; }
 
-        .upload-section:hover { box-shadow: 0 15px 40px rgba(44, 62, 80, 0.15); }
+.file-list { margin-top: 1rem; text-align: left; }
+.file-item {
+  background: var(--paper2);
+  padding: .85rem;
+  border-radius: var(--r);
+  margin-bottom: .4rem;
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  border: 1px solid var(--rule);
+}
+.file-icon { font-size: 1.2rem; color: var(--blue2); }
+.file-name { font-weight: 500; flex: 1; font-size: .9rem; }
+.file-size { color: var(--ink3); font-size: .8rem; }
 
-        .upload-icon { font-size: 3rem; color: var(--accent); margin-bottom: 0.6rem; }
+.process-button {
+  width: 100%;
+  padding: .8rem 1.5rem;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: var(--r);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+  margin-top: .85rem;
+  letter-spacing: -.01em;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.process-button:hover { background: #166534; }
+.process-button:disabled { background: var(--ink3); cursor: not-allowed; }
 
-        .upload-title { font-size: 1.4rem; font-weight: 700; color: var(--primary); margin-bottom: 0.6rem; }
+.progress-section {
+  background: var(--paper);
+  border-radius: var(--r2);
+  padding: 1.2rem;
+  margin-top: 1rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--rule);
+  display: none;
+}
+.progress-title { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: .85rem; text-align: center; }
+.progress-bar { width: 100%; height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; margin-bottom: .85rem; }
+.progress-fill { height: 100%; background: var(--blue2); width: 0%; transition: width .3s; }
+.progress-text { text-align: center; color: var(--ink3); font-size: .85rem; }
 
-        .upload-desc { font-size: 0.95rem; color: var(--text-light); margin-bottom: 1.2rem; }
+.results-section {
+  background: var(--paper);
+  border-radius: var(--r2);
+  padding: 1.2rem;
+  margin-top: 1rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--rule);
+  display: none;
+}
+.results-title { font-size: 1.1rem; font-weight: 700; color: var(--green); margin-bottom: 1.2rem; text-align: center; }
 
-        .file-input-wrapper { position: relative; display: inline-block; }
+.result-item {
+  background: var(--paper2);
+  padding: .85rem;
+  border-radius: var(--r);
+  margin-bottom: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .85rem;
+  border: 1px solid var(--rule);
+}
+.result-name { font-weight: 500; flex: 1; font-size: .9rem; }
 
-        .file-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.download-btn {
+  padding: .45rem .9rem;
+  background: var(--ink2);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--r);
+  font-size: .85rem;
+  font-weight: 500;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.download-btn:hover { background: var(--ink); }
 
-        .file-button {
-            display: inline-block;
-            padding: 0.8rem 1.7rem;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            color: white;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 0.5px;
-        }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .85rem; margin-top: 1.5rem; }
+.info-card {
+  background: var(--paper);
+  padding: 1rem;
+  border-radius: var(--r2);
+  text-align: center;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+}
+.info-icon { font-size: 1.6rem; margin-bottom: .4rem; }
+.info-title { font-size: .95rem; font-weight: 600; color: var(--ink); margin-bottom: .3rem; }
+.info-desc { color: var(--ink3); font-size: .8rem; }
 
-        .file-button:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3); }
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-        .file-list { margin-top: 1.2rem; text-align: left; }
+@media (max-width: 768px) {
+  .title { font-size: 1.3rem; }
+  .upload-section { padding: 1.2rem; }
+  .container { padding: .85rem; }
+}
 
-        .file-item {
-            background: var(--bg);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            border: 1px solid var(--border);
-        }
+.drag-over { border-color: var(--blue2); background: var(--blue-dim); }
 
-        .file-icon { font-size: 1.5rem; color: var(--accent); }
-        .file-name { font-weight: 500; flex: 1; }
-        .file-size { color: var(--text-light); font-size: 0.9rem; }
+.zip-btn {
+  padding: .8rem 1.5rem;
+  background: var(--blue2);
+  color: white;
+  border: none;
+  border-radius: var(--r);
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.zip-btn:hover { background: var(--blue); }
+.zip-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-        .process-button {
-            width: 100%;
-            padding: 0.9rem 1.7rem;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 1rem;
-            letter-spacing: 0.5px;
-            font-family: 'Noto Sans KR', sans-serif;
-        }
+#font-status { font-size: .8rem; color: var(--ink3); margin-top: .4rem; text-align: center; }
+#font-status.ready { color: var(--green); }
+#font-status.error { color: var(--red); }
 
-        .process-button:hover { background: #219a52; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3); }
-        .process-button:disabled { background: var(--text-light); cursor: not-allowed; transform: none; box-shadow: none; }
+/* 설정 패널 관련 (기존 스타일 유지 + 통일) */
+.settings-panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r2);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+}
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .85rem; }
+.setting-group label { font-size: .8rem; color: var(--ink3); font-weight: 600; display: block; margin-bottom: .3rem; }
+.setting-group input, .setting-group select {
+  width: 100%; padding: .45rem .7rem;
+  border: 1px solid var(--rule2); border-radius: var(--r);
+  font-size: .875rem; background: var(--paper2); color: var(--ink);
+  font-family: 'Noto Sans KR', sans-serif; outline: none;
+}
+.setting-group input:focus, .setting-group select:focus { border-color: var(--blue2); }
 
-        .progress-section {
-            background: var(--card);
-            border-radius: 10px;
-            padding: 1.2rem;
-            margin-top: 1.2rem;
-            box-shadow: 0 8px 25px var(--shadow);
-            display: none;
-        }
-
-        .progress-title { font-size: 1.3rem; font-weight: 600; color: var(--primary); margin-bottom: 1rem; text-align: center; }
-
-        .progress-bar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
-
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); width: 0%; transition: width 0.3s ease; }
-
-        .progress-text { text-align: center; color: var(--text-light); font-size: 0.9rem; }
-
-        .results-section {
-            background: var(--card);
-            border-radius: 10px;
-            padding: 1.2rem;
-            margin-top: 1.2rem;
-            box-shadow: 0 8px 25px var(--shadow);
-            display: none;
-        }
-
-        .results-title { font-size: 1.5rem; font-weight: 700; color: var(--success); margin-bottom: 1.5rem; text-align: center; }
-
-        .result-item {
-            background: var(--bg);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: between;
-            gap: 1rem;
-            border: 1px solid var(--border);
-        }
-
-        .result-name { font-weight: 500; flex: 1; }
-
-        .download-btn {
-            padding: 0.5rem 1rem;
-            background: var(--secondary);
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .download-btn:hover { background: var(--primary); transform: translateY(-1px); }
-
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.8rem; }
-
-        .info-card {
-            background: var(--card);
-            padding: 1.2rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid var(--border);
-            box-shadow: 0 5px 15px var(--shadow);
-        }
-
-        .info-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        .info-title { font-size: 1.05rem; font-weight: 600; color: var(--primary); margin-bottom: 0.4rem; }
-        .info-desc { color: var(--text-light); font-size: 0.9rem; }
-
-        .fade-in { animation: fadeIn 0.6s ease-out; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-            .title { font-size: 2.5rem; }
-            .upload-section { padding: 2rem; }
-            .container { padding: 1rem; }
-        }
-
-        .drag-over { border-color: var(--accent); background: rgba(231, 76, 60, 0.05); }
-
-        .zip-btn {
-            padding: 0.9rem 2rem;
-            background: linear-gradient(135deg, #2980b9, #3498db);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-        .zip-btn:hover { background: linear-gradient(135deg, #1a6fa5, #2980b9); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(41,128,185,0.35); }
-        .zip-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-        /* 폰트 로딩 안내 */
-        #font-status {
-            font-size: 0.85rem;
-            color: var(--text-light);
-            margin-top: 0.5rem;
-            text-align: center;
-        }
-        #font-status.ready { color: var(--success); }
-        #font-status.error { color: var(--accent); }
-
-    </style>
+</style>
 </head>
 <body>
     <div class="container">
