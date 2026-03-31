@@ -523,10 +523,12 @@
                 });
 
             } else if (rotation === 90) {
-                // ── 시계 반대 방향 90° (왼쪽이 화면 하단) ──────
-                // 화면에서 보이는 하단 중앙 = PDF 좌표계에서 좌측 중앙
-                // PDF 좌표계 기준: x=margin(왼쪽 끝), y=중앙
-                rectX = margin;
+                // ── 90° 회전 ──────────────────────────────────────
+                // rawWidth=595(짧은변), rawHeight=842(긴변), rotation=90
+                // 화면에서 보이는 방향: 가로(842) x 세로(595)
+                // 화면 하단 = PDF 좌표계 오른쪽(x축 최대값 쪽)
+                // 화면 중앙(가로) = PDF 좌표계 y축 중앙
+                rectX = rawWidth - margin - boxHeight;
                 rectY = (rawHeight - boxWidth) / 2;
                 textX = rectX + paddingBottom + descent;
                 textY = rectY + paddingX;
